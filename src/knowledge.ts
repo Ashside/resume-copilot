@@ -3,7 +3,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import Jimp from 'jimp';
+import * as jpegJs from 'jpeg-js';
 import { chatCompletion, getLLMConfig, getVisionConfig } from './llm';
+
+// jpeg-js (used by jimp) defaults to 512MB max memory; raise it for large/high-res images.
+const originalJpegDecode = jpegJs.decode;
+(jpegJs as any).decode = (jpegData: Buffer, userOpts?: any) => {
+  return originalJpegDecode(jpegData, { ...userOpts, maxMemoryUsageInMB: 4096 });
+};
 
 export interface KnowledgeItem {
   id: string;
