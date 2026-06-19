@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import Jimp from 'jimp';
 import { chatCompletion, getLLMConfig, getVisionConfig } from './llm';
 
 export interface KnowledgeItem {
@@ -129,14 +130,18 @@ export async function addKnowledgeFromFile(sourceUri: vscode.Uri): Promise<Knowl
     const content = await fs.promises.readFile(storedPath, 'utf-8');
     summary = await summarizeText(content, fileName);
   } else {
-    const stats = await fs.promises.stat(storedPath);
-    const sizeMb = stats.size / (1024 * 1024);
+    let imageBuffer: Buffer<ArrayBufferLike> = await fs.promises.readFile(storedPath);
+    let sizeMb = imageBuffer.length / (1024 * 1024);
     if (sizeMb > MAX_IMAGE_SIZE_MB) {
-      throw new Error(
-        `Image too large (${sizeMb.toFixed(1)} MB). Please resize to under ${MAX_IMAGE_SIZE_MB} MB or use a lower resolution image.`
-      );
+      imageBuffer = await compressImage(imageBuffer, ext);
+      sizeMb = imageBuffer.length / (1024 * 1024);
+      if (sizeMb > MAX_IMAGE_SIZE_MB) {
+        throw new Error(
+          `Image still too large after compression (${sizeMb.toFixed(1)} MB). Please resize to under ${MAX_IMAGE_SIZE_MB} MB or use a lower resolution image.`
+        );
+      }
     }
-    const base64 = await fs.promises.readFile(storedPath, 'base64');
+    const base64 = imageBuffer.toString('base64');
     summary = await summarizeImage(base64, ext, fileName);
   }
 
@@ -192,6 +197,26 @@ async function summarizeText(content: string, fileName: string): Promise<string>
     config,
     { maxTokens: 512 }
   );
+}
+
+async function compressImage(buffer: Buffer<ArrayBufferLike>, ext: string): Promise<Buffer<ArrayBufferLike>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const image = await Jimp.read(buffer as any);
+  const maxDimension = 2048;
+  if (image.getWidth() > maxDimension || image.getHeight() > maxDimension) {
+    image.resize(maxDimension, Jimp.AUTO);
+  }
+  image.quality(80);
+
+  const mimeType =
+    ext === '.png'
+      ? Jimp.MIME_PNG
+      : ext === '.gif'
+      ? Jimp.MIME_GIF
+      : Jimp.MIME_JPEG;
+
+  const compressed = await image.getBufferAsync(mimeType);
+  return Buffer.from(compressed);
 }
 
 async function summarizeImage(base64: string, ext: string, fileName: string): Promise<string> {
