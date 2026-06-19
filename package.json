@@ -1,0 +1,129 @@
+{
+  "name": "resume-copilot",
+  "displayName": "Resume Copilot",
+  "description": "An AI writing assistant for Markdown resumes, inspired by Copilot.",
+  "version": "1.0.0",
+  "publisher": "resume-copilot",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/resume-copilot.git"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onCommand:resumeCopilot.startDiscovery",
+    "onCommand:resumeCopilot.openProfile",
+    "onCommand:resumeCopilot.addKnowledge",
+    "onCommand:resumeCopilot.manageKnowledge"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.7.0"
+  },
+  "contributes": {
+    "configuration": {
+      "title": "Resume Copilot",
+      "properties": {
+        "resumeCopilot.apiBaseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "Base URL for the OpenAI-compatible chat completions API."
+        },
+        "resumeCopilot.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for the LLM provider."
+        },
+        "resumeCopilot.model": {
+          "type": "string",
+          "default": "gpt-4o-mini",
+          "description": "Model name to use for completions and polish."
+        },
+        "resumeCopilot.enableInlineCompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable ghost-text inline completions while writing resume bullets."
+        },
+        "resumeCopilot.enableDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline diagnostics for common resume weaknesses."
+        },
+        "resumeCopilot.profilePath": {
+          "type": "string",
+          "default": ".resume-copilot/profile.json",
+          "description": "Relative path to the discovery profile JSON file."
+        },
+        "resumeCopilot.enableProfileContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include the discovery profile as context when generating completions and polish suggestions."
+        },
+        "resumeCopilot.knowledgePath": {
+          "type": "string",
+          "default": ".resume-copilot/knowledge.json",
+          "description": "Relative path to the knowledge base JSON file."
+        },
+        "resumeCopilot.visionModel": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "Model name used for summarizing uploaded images. Must support vision."
+        },
+        "resumeCopilot.enableKnowledgeContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include uploaded knowledge summaries as implicit context in discovery, completions, and polish."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "resumeCopilot.startDiscovery",
+        "title": "Resume Copilot: Start Discovery Interview"
+      },
+      {
+        "command": "resumeCopilot.openProfile",
+        "title": "Resume Copilot: Open Profile"
+      },
+      {
+        "command": "resumeCopilot.addKnowledge",
+        "title": "Resume Copilot: Add Background Knowledge"
+      },
+      {
+        "command": "resumeCopilot.manageKnowledge",
+        "title": "Resume Copilot: Manage Background Knowledge"
+      },
+      {
+        "command": "resumeCopilot.polishSelection",
+        "title": "Resume Copilot: Polish Selection"
+      },
+      {
+        "command": "resumeCopilot.refreshDiagnostics",
+        "title": "Resume Copilot: Refresh Diagnostics"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "resumeCopilot.polishSelection",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorHasSelection && editorLangId == markdown"
+      }
+    ]
+  }
+}
